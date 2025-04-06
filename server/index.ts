@@ -1,14 +1,16 @@
 import express from 'express'
 import cors from 'cors'
 import mysql from 'mysql2/promise'
-import tasksRouter from './api/tasks';
+import tasksRouter from './api/tasks'
 
 const app = express()
-app.use(cors({
-  origin: 'http://localhost:5173' // URL вашего фронтенда
-}));
+app.use(
+  cors({
+    origin: 'http://localhost:5173', // URL вашего фронтенда
+  }),
+)
 app.use(express.json())
-app.use('/tasks', tasksRouter);
+app.use('/tasks', tasksRouter)
 
 export const pool = mysql.createPool({
   host: 'localhost',
