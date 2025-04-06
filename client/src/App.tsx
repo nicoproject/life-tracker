@@ -29,12 +29,20 @@ export default function App() {
     setTasks(tasks.filter(t => t.id !== id));
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleAddTask(); 
+    }
+  };
+
   return (
     <div className="app">
       <input
         type="text"
         value={newTaskTitle}
         onChange={(e) => setNewTaskTitle(e.target.value)}
+        onKeyDown={handleKeyDown} 
         placeholder="Новая задача"
       />
       <button onClick={handleAddTask}>Добавить</button>
