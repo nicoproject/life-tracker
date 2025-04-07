@@ -32,7 +32,9 @@ export default function App() {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleAddTask(); 
+      if (newTaskTitle.trim()) {
+        handleAddTask();
+      }
     }
   };
 
