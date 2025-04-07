@@ -5,6 +5,30 @@ COLLATE utf8mb4_unicode_ci;
 
 USE life_tracker;
 
+-- Таблица трекеров
+CREATE TABLE IF NOT EXISTS trackers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    type ENUM('counter', 'progress', 'habit') NOT NULL,
+    current_value INT DEFAULT 0,
+    target_value INT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Таблица записей трекеров
+CREATE TABLE IF NOT EXISTS tracker_entries (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tracker_id INT NOT NULL,
+    date DATE NOT NULL,
+    value INT NOT NULL,
+    status ENUM('success', 'failure', 'reset') NOT NULL,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (tracker_id) REFERENCES trackers(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_tracker_date (tracker_id, date)
+) ENGINE=InnoDB;
+
 -- Основная таблица задач (с точными значениями из вашего работающего кода)
 CREATE TABLE IF NOT EXISTS tasks (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -21,3 +45,5 @@ CREATE TABLE IF NOT EXISTS tasks (
 CREATE INDEX idx_tasks_status ON tasks(status);
 CREATE INDEX idx_tasks_priority ON tasks(priority);
 CREATE INDEX idx_tasks_due_date ON tasks(due_date);
+CREATE INDEX idx_tracker_entries_date ON tracker_entries(date);
+CREATE INDEX idx_tracker_entries_status ON tracker_entries(status);

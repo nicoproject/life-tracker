@@ -1,3 +1,4 @@
+import React from 'react';
 import styles from './TaskCard.module.css';
 
 type TaskProps = {
@@ -10,6 +11,8 @@ type TaskProps = {
   onDelete: (id: number) => void;
 };
 
+const STATUS_OPTIONS = ['Не начато', 'В процессе', 'Завершено', 'Отложено'] as const;
+
 export const TaskCard = ({ task, onUpdateStatus, onDelete }: TaskProps) => {
   return (
     <div className={styles['task-card']}>
@@ -20,9 +23,11 @@ export const TaskCard = ({ task, onUpdateStatus, onDelete }: TaskProps) => {
           value={task.status} 
           onChange={(e) => onUpdateStatus(task.id, e.target.value)}
         >
-          <option value="Не начато">Не начато</option>
-          <option value="В процессе">В процессе</option>
-          <option value="Готово">Готово</option>
+          {STATUS_OPTIONS.map(status => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
         </select>
       </p>
       <button onClick={() => onDelete(task.id)}>Удалить</button>

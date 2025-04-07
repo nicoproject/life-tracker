@@ -1,0 +1,13 @@
+DROP TABLE IF EXISTS tracker_entries;
+
+CREATE TABLE tracker_entries (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  tracker_id INT NOT NULL,
+  date DATE NOT NULL,
+  entry_time TIME NOT NULL DEFAULT CURRENT_TIME,
+  status VARCHAR(50) NOT NULL,
+  value INT DEFAULT 1,
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (tracker_id) REFERENCES trackers(id) ON DELETE CASCADE
+); 

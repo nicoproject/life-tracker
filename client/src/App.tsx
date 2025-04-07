@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Dashboard } from './components/Dashboard';
 import { TaskCard } from './components/TaskCard';
 import { fetchTasks, createTask, updateTask, deleteTask } from './api';
+import './App.css';
 
-export default function App() {
+export const App: React.FC = () => {
   const [tasks, setTasks] = useState<{ id: number; title: string; status: string }[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
 
@@ -18,10 +20,22 @@ export default function App() {
   };
 
   const handleUpdateTask = async (id: number, newStatus: string) => {
-    const task = tasks.find(t => t.id === id);
-    if (!task) return;
-    const updatedTask = await updateTask(id, { ...task, status: newStatus });
-    setTasks(tasks.map(t => (t.id === id ? updatedTask : t)));
+    try {
+      const task = tasks.find(t => t.id === id);
+      if (!task) {
+        console.error('Task not found:', id);
+        return;
+      }
+      
+      const updatedTask = await updateTask(id, {
+        title: task.title,
+        status: newStatus
+      });
+      
+      setTasks(tasks.map(t => (t.id === id ? updatedTask : t)));
+    } catch (error) {
+      console.error('Error updating task:', error);
+    }
   };
 
   const handleDeleteTask = async (id: number) => {
@@ -39,24 +53,31 @@ export default function App() {
   };
 
   return (
-    <div className="app">
-      <input
-        type="text"
-        value={newTaskTitle}
-        onChange={(e) => setNewTaskTitle(e.target.value)}
-        onKeyDown={handleKeyDown} 
-        placeholder="Новая задача"
-      />
-      <button onClick={handleAddTask}>Добавить</button>
-
-      {tasks.map(task => (
-        <TaskCard
-          key={task.id}
-          task={task}
-          onUpdateStatus={handleUpdateTask}
-          onDelete={handleDeleteTask}
-        />
-      ))}
+    <div className="App">
+      <Dashboard />
+      <div className="tasks-section">
+        <h2>Задачи</h2>
+        <div className="add-task">
+          <input
+            type="text"
+            value={newTaskTitle}
+            onChange={(e) => setNewTaskTitle(e.target.value)}
+            onKeyDown={handleKeyDown} 
+            placeholder="Новая задача"
+          />
+          <button onClick={handleAddTask}>Добавить</button>
+        </div>
+        <div className="tasks-list">
+          {tasks.map(task => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              onUpdateStatus={handleUpdateTask}
+              onDelete={handleDeleteTask}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
-}
+};
