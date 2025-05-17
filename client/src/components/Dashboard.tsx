@@ -100,8 +100,10 @@ export const Dashboard: React.FC = () => {
                   <h2>{tracker.name}</h2>
                   <p>Тип: {tracker.type}</p>
                   <p>Текущее значение: {tracker.current_value}</p>
-                  {tracker.target_value && (
+                  {tracker.target_value !== null && tracker.target_value !== undefined ? (
                     <p>Целевое значение: {tracker.target_value}</p>
+                  ) : (
+                    <p>Целевое значение: -</p>
                   )}
                   <button 
                     className={styles.deleteButton}

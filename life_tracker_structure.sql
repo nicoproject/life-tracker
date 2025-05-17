@@ -9,7 +9,7 @@ USE life_tracker;
 CREATE TABLE IF NOT EXISTS trackers (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    type ENUM('counter', 'progress', 'habit') NOT NULL,
+    type ENUM('counter', 'progress', 'habit', 'measurement') NOT NULL,
     current_value INT DEFAULT 0,
     target_value INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -21,12 +21,12 @@ CREATE TABLE IF NOT EXISTS tracker_entries (
     id INT AUTO_INCREMENT PRIMARY KEY,
     tracker_id INT NOT NULL,
     date DATE NOT NULL,
-    value INT NOT NULL,
-    status ENUM('success', 'failure', 'reset') NOT NULL,
+    entry_time TIME NOT NULL DEFAULT CURRENT_TIME,
+    value DECIMAL(10,2) NOT NULL,
+    status ENUM('success', 'failure', 'reset', 'measurement') NOT NULL,
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (tracker_id) REFERENCES trackers(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_tracker_date (tracker_id, date)
+    FOREIGN KEY (tracker_id) REFERENCES trackers(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- Основная таблица задач (с точными значениями из вашего работающего кода)

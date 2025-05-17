@@ -5,14 +5,13 @@ import styles from './SmokingTracker.module.css';
 
 const formatDateTime = (dateString: string, timeString: string) => {
   const date = new Date(dateString);
-  const time = new Date(timeString);
   return new Intl.DateTimeFormat('ru-RU', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
-  }).format(time);
+  }).format(date) + ' ' + timeString;
 };
 
 interface SmokingTrackerProps {
@@ -101,9 +100,17 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
         return;
       }
 
+      // Проверяем, можно ли обнулить счетчик
+      if (status === 'reset' && tracker.current_value === 0) {
+        setMessage({
+          text: 'Счетчик уже обнулен',
+          type: 'info'
+        });
+        return;
+      }
+
       const entry = await updateTrackerEntry(tracker.id, {
         date: today,
-        entry_time: now.toISOString().split('T')[1],
         status,
         notes: status === 'failure' ? 'Срыв' : undefined,
       });
@@ -204,7 +211,7 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
         </button>
         <button 
           onClick={() => handleStatusChange('reset')}
-          disabled={todayEntries.some(e => e.status === 'reset')}
+          disabled={todayEntries.some(e => e.status === 'reset') || tracker.current_value === 0}
         >
           Обнулить счетчик
         </button>

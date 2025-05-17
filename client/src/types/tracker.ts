@@ -1,6 +1,6 @@
-export type TrackerType = 'counter' | 'progress' | 'habit'
+export type TrackerType = 'counter' | 'progress' | 'habit' | 'measurement'
 
-export type TrackerStatus = 'success' | 'failure' | 'reset'
+export type TrackerStatus = 'success' | 'failure' | 'reset' | 'measurement'
 
 export interface Tracker {
   id: number
@@ -33,6 +33,7 @@ export interface UpdateTrackerEntryInput {
   date: string
   entry_time?: string
   status: TrackerStatus
+  value?: number
   notes?: string
 }
 

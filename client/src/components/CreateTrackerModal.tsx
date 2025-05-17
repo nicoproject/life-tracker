@@ -17,21 +17,44 @@ export const CreateTrackerModal: React.FC<CreateTrackerModalProps> = ({
   const [targetValue, setTargetValue] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
 
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedType = e.target.value as TrackerType;
+    setType(selectedType);
+    if (selectedType === 'counter') setTargetValue(0);
+    else if (selectedType === 'progress') setTargetValue(100);
+    else if (selectedType === 'habit') setTargetValue(21);
+    else setTargetValue(0);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      await createTracker({
+      const trackerData: any = {
         name,
-        type,
-        target_value: targetValue
-      });
+        type
+      };
+      if (type !== 'measurement') {
+        trackerData.target_value = targetValue;
+      } else {
+        trackerData.target_value = null;
+      }
+      await createTracker(trackerData);
       
       onTrackerCreated();
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка при создании трекера');
     }
+  };
+
+  const LABELS = {
+    name: 'Название трекера',
+    type: 'Тип трекера',
+    value: 'Значение',
+    cancel: 'Отмена',
+    create: 'Создать',
+    createTitle: 'Создать новый трекер',
   };
 
   return (
@@ -45,7 +68,7 @@ export const CreateTrackerModal: React.FC<CreateTrackerModalProps> = ({
           ×
         </button>
         
-        <h2>Создать новый трекер</h2>
+        <h2>{LABELS.createTitle}</h2>
         
         {error && (
           <div className={styles.error}>
@@ -55,7 +78,7 @@ export const CreateTrackerModal: React.FC<CreateTrackerModalProps> = ({
         
         <form onSubmit={handleSubmit}>
           <div className={styles.formGroup}>
-            <label htmlFor="name">Название трекера:</label>
+            <label htmlFor="name">{LABELS.name}:</label>
             <input
               type="text"
               id="name"
@@ -67,36 +90,39 @@ export const CreateTrackerModal: React.FC<CreateTrackerModalProps> = ({
           </div>
           
           <div className={styles.formGroup}>
-            <label htmlFor="type">Тип трекера:</label>
+            <label htmlFor="type">{LABELS.type}:</label>
             <select
               id="type"
               value={type}
-              onChange={(e) => setType(e.target.value as TrackerType)}
+              onChange={handleTypeChange}
             >
               <option value="counter">Счетчик</option>
               <option value="progress">Прогресс</option>
               <option value="habit">Привычка</option>
+              <option value="measurement">Измерение</option>
             </select>
           </div>
           
-          <div className={styles.formGroup}>
-            <label htmlFor="targetValue">Целевое значение:</label>
-            <input
-              type="number"
-              id="targetValue"
-              value={targetValue}
-              onChange={(e) => setTargetValue(Number(e.target.value))}
-              min="0"
-              required
-            />
-          </div>
+          {(type === 'counter' || type === 'progress' || type === 'habit') && (
+            <div className={styles.formGroup}>
+              <label htmlFor="targetValue">{LABELS.value}:</label>
+              <input
+                type="number"
+                id="targetValue"
+                value={targetValue}
+                onChange={(e) => setTargetValue(Number(e.target.value))}
+                min="0"
+                required
+              />
+            </div>
+          )}
           
           <div className={styles.formActions}>
             <button type="button" onClick={onClose} className={styles.cancelButton}>
-              Отмена
+              {LABELS.cancel}
             </button>
             <button type="submit" className={styles.submitButton}>
-              Создать
+              {LABELS.create}
             </button>
           </div>
         </form>

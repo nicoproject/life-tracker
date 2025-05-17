@@ -42,7 +42,10 @@ export const updateTrackerEntry = async (
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   })
-  if (!response.ok) throw new Error('Failed to update tracker entry')
+  if (!response.ok) {
+    const errorData = await response.json()
+    throw new Error(errorData.error || 'Failed to update tracker entry')
+  }
   return response.json()
 }
 

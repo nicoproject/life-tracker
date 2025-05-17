@@ -65,6 +65,8 @@ router.post('/:id/entries', async (req, res) => {
   const { date, status, notes } = req.body
 
   try {
+    console.log('Creating tracker entry:', { id, date, status, notes })
+
     // Проверяем существование трекера
     const trackers = await db.query<Tracker>(
       'SELECT * FROM trackers WHERE id = ?',
@@ -72,6 +74,7 @@ router.post('/:id/entries', async (req, res) => {
     )
 
     if (trackers.length === 0) {
+      console.log('Tracker not found:', id)
       return res.status(404).json({ error: 'Tracker not found' })
     }
 
@@ -82,6 +85,7 @@ router.post('/:id/entries', async (req, res) => {
     )
 
     if (existingEntries.length > 0) {
+      console.log('Entry already exists:', { id, date, status })
       return res
         .status(400)
         .json({ error: 'Entry for this date and status already exists' })
@@ -118,10 +122,16 @@ router.post('/:id/entries', async (req, res) => {
       ])
     }
 
+    console.log('Successfully created entry:', newEntry)
     res.status(201).json(newEntry)
   } catch (err) {
     console.error('Error creating tracker entry:', err)
-    res.status(500).json({ error: 'Failed to create tracker entry' })
+    res
+      .status(500)
+      .json({
+        error:
+          err instanceof Error ? err.message : 'Failed to create tracker entry',
+      })
   }
 })
 
