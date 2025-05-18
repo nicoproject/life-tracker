@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Dashboard } from './components/Dashboard';
 import { TaskCard } from './components/TaskCard';
 import { fetchTasks, createTask, updateTask, deleteTask } from './api';
+import { LanguageProvider } from './constants/labels';
 import './App.css';
 
 export const App: React.FC = () => {
@@ -53,31 +54,33 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="App">
-      <Dashboard />
-      <div className="tasks-section">
-        <h2>Задачи</h2>
-        <div className="add-task">
-          <input
-            type="text"
-            value={newTaskTitle}
-            onChange={(e) => setNewTaskTitle(e.target.value)}
-            onKeyDown={handleKeyDown} 
-            placeholder="Новая задача"
-          />
-          <button onClick={handleAddTask}>Добавить</button>
-        </div>
-        <div className="tasks-list">
-          {tasks.map(task => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              onUpdateStatus={handleUpdateTask}
-              onDelete={handleDeleteTask}
+    <LanguageProvider>
+      <div className="App">
+        <Dashboard />
+        <div className="tasks-section">
+          <h2>Задачи</h2>
+          <div className="add-task">
+            <input
+              type="text"
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              onKeyDown={handleKeyDown} 
+              placeholder="Новая задача"
             />
-          ))}
+            <button onClick={handleAddTask}>Добавить</button>
+          </div>
+          <div className="tasks-list">
+            {tasks.map(task => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                onUpdateStatus={handleUpdateTask}
+                onDelete={handleDeleteTask}
+              />
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </LanguageProvider>
   );
 };

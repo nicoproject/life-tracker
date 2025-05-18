@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Tracker, TrackerEntry, TrackerStatus } from '../types/tracker';
 import { fetchTrackers, fetchTrackerEntries, updateTrackerEntry, createTracker, deleteTracker } from '../api/tracker';
 import styles from './SmokingTracker.module.css';
+import { useLanguage } from '../constants/labels.tsx';
 
 const formatDateTime = (dateString: string, timeString: string) => {
   const date = new Date(dateString);
@@ -19,6 +20,7 @@ interface SmokingTrackerProps {
 }
 
 export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => {
+  const { t } = useLanguage();
   const [tracker, setTracker] = useState<Tracker | null>(null);
   const [entries, setEntries] = useState<TrackerEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +67,7 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
           }));
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Произошла ошибка');
+        setError(err instanceof Error ? err.message : t('errorLoadingTrackers'));
       } finally {
         setLoading(false);
       }
@@ -88,9 +90,9 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
       
       if (hasSameStatusToday) {
         const messages: { failure: string; success: string; reset: string } = {
-          failure: 'Вы уже отметили срыв сегодня, успокойтесь, срыв - часть выздоровления',
-          success: 'Вы уже отметили успешный день сегодня',
-          reset: 'Вы уже сбросили счетчик сегодня'
+          failure: t('alreadyMarkedFailure'),
+          success: t('alreadyMarkedSuccess'),
+          reset: t('alreadyReset')
         };
         
         setMessage({
@@ -102,14 +104,14 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
 
       // Check if the counter can be reset
       if (status === 'reset' && tracker.current_value === 0) {
-        setMessage({ text: 'Счетчик уже обнулен', type: 'info' });
+        setMessage({ text: t('counterAlreadyReset'), type: 'info' });
         return;
       }
 
       const entry = await updateTrackerEntry(tracker.id, {
         date: today,
         status,
-        notes: status === 'failure' ? 'Срыв' : undefined,
+        notes: status === 'failure' ? t('statusFailure') : undefined,
       });
       
       if (status === 'success') {
@@ -125,7 +127,7 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
         );
         
         if (isDuplicate) {
-          setMessage({ text: 'Эта запись уже существует', type: 'info' });
+          setMessage({ text: t('entryAlreadyExists'), type: 'info' });
           return prev;
         }
         
@@ -136,7 +138,7 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
         });
       });
     } catch (err) {
-      setMessage({ text: err instanceof Error ? err.message : 'Произошла ошибка', type: 'error' });
+      setMessage({ text: err instanceof Error ? err.message : t('errorLoadingTrackers'), type: 'error' });
     }
   };
 
@@ -145,19 +147,19 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
 
     try {
       await deleteTracker(tracker.id);
-      setMessage({ text: 'Трекер успешно удален', type: 'info' });
+      setMessage({ text: t('trackerDeleted'), type: 'info' });
       onDeleted?.(tracker.id);
       setTracker(null);
       setEntries([]);
       setIsDeleteConfirmOpen(false);
     } catch (err) {
-      setMessage({ text: err instanceof Error ? err.message : 'Ошибка при удалении трекера', type: 'error' });
+      setMessage({ text: err instanceof Error ? err.message : t('errorDeletingTracker'), type: 'error' });
     }
   };
 
-  if (loading) return <div>Загрузка...</div>;
-  if (error) return <div>Ошибка: {error}</div>;
-  if (!tracker) return <div>Трекер не найден</div>;
+  if (loading) return <div>{t('loading')}</div>;
+  if (error) return <div>{t('error')}: {error}</div>;
+  if (!tracker) return <div>{t('errorLoadingTrackers')}</div>;
 
   const now = new Date();
   const today = now.toISOString().split('T')[0];
@@ -165,49 +167,49 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
 
   return (
     <div className={styles.smokingTracker}>
-      <h2>Трекер курения</h2>
+      <h2>{t('smokingTracker')}</h2>
       {message && (
         <div className={`${styles.message} ${styles[message.type]}`}>
           <span>{message.text}</span>
           <button 
             className={styles.closeMessage} 
             onClick={() => setMessage(null)}
-            aria-label="Закрыть сообщение"
+            aria-label={t('close')}
           >
             ×
           </button>
         </div>
       )}
       <div className={styles.currentStats}>
-        <p>Дней без курения: {tracker.current_value}</p>
+        <p>{t('daysWithoutSmoking')}: {tracker.current_value}</p>
       </div>
       <div className={styles.actions}>
         <button 
           onClick={() => handleStatusChange('success')}
           disabled={todayEntries.some(e => e.status === 'success')}
         >
-          Отметить успешный день
+          {t('markSuccessfulDay')}
         </button>
         <button 
           onClick={() => handleStatusChange('failure')}
           disabled={todayEntries.some(e => e.status === 'failure')}
         >
-          Отметить срыв
+          {t('markFailure')}
         </button>
         <button 
           onClick={() => handleStatusChange('reset')}
           disabled={todayEntries.some(e => e.status === 'reset') || tracker.current_value === 0}
         >
-          Обнулить счетчик
+          {t('resetCounter')}
         </button>
         <button onClick={() => setIsHistoryOpen(true)}>
-          Показать историю
+          {t('showHistory')}
         </button>
         <button 
           className={styles.deleteButton}
           onClick={() => setIsDeleteConfirmOpen(true)}
         >
-          Удалить трекер
+          {t('delete')}
         </button>
       </div>
 
@@ -220,11 +222,11 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
             >
               ×
             </button>
-            <h3>История трекера ({entries.length} {entries.length === 1 ? 'запись' : entries.length >= 2 && entries.length <= 4 ? 'записи' : 'записей'})</h3>
+            <h3>{t('trackerHistory')} ({entries.length} {entries.length === 1 ? t('entry') : t('entries')})</h3>
             <ul className={styles.historyList}>
               {entries.map(entry => (
                 <li key={`${entry.date}-${entry.entry_time}-${entry.status}`}>
-                  {formatDateTime(entry.date, entry.entry_time)}: {entry.status === 'success' ? 'Успех' : entry.status === 'failure' ? 'Срыв' : 'Сброс'}
+                  {formatDateTime(entry.date, entry.entry_time)}: {entry.status === 'success' ? t('statusSuccess') : entry.status === 'failure' ? t('statusFailure') : t('statusReset')}
                 </li>
               ))}
             </ul>
@@ -235,20 +237,20 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
       {isDeleteConfirmOpen && (
         <div className={styles.modal}>
           <div className={`${styles.modalContent} ${styles.confirmDialog}`}>
-            <h3>Подтверждение удаления</h3>
-            <p>Вы уверены, что хотите удалить трекер? Это действие нельзя отменить.</p>
+            <h3>{t('deleteConfirmation')}</h3>
+            <p>{t('deleteConfirmationMessage')}</p>
             <div className={styles.confirmActions}>
               <button 
                 className={styles.confirmButton}
                 onClick={handleDeleteTracker}
               >
-                Да, удалить
+                {t('yes')}
               </button>
               <button 
                 className={styles.cancelButton}
                 onClick={() => setIsDeleteConfirmOpen(false)}
               >
-                Отмена
+                {t('cancel')}
               </button>
             </div>
           </div>

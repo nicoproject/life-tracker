@@ -4,10 +4,12 @@ import { fetchTrackers, deleteTracker, updateTracker } from '../api/tracker';
 import { SmokingTracker } from './SmokingTracker';
 import { CreateTrackerModal } from './CreateTrackerModal';
 import { EditTrackerModal } from './EditTrackerModal';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import styles from './Dashboard.module.css';
-import { LABELS } from './labels';
+import { useLanguage } from '../constants/labels.tsx';
 
 export const Dashboard: React.FC = () => {
+  const { t } = useLanguage();
   const [trackers, setTrackers] = useState<Tracker[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,14 +34,14 @@ export const Dashboard: React.FC = () => {
         if (!exists) {
           acc.push(current);
         } else {
-          console.warn(`Найден дубликат трекера: ${current.name}`);
+          console.warn(`Found duplicate tracker: ${current.name}`);
         }
         return acc;
       }, []);
 
       setTrackers(uniqueTrackers);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка при загрузке трекеров');
+      setError(err instanceof Error ? err.message : t('errorLoadingTrackers'));
     } finally {
       setLoading(false);
     }
@@ -50,12 +52,12 @@ export const Dashboard: React.FC = () => {
       await deleteTracker(trackerId);
       setTrackers(prev => prev.filter(t => t.id !== trackerId));
       setMessage({
-        text: 'Трекер успешно удален',
+        text: t('trackerDeleted'),
         type: 'info'
       });
     } catch (err) {
       setMessage({
-        text: err instanceof Error ? err.message : 'Ошибка при удалении трекера',
+        text: err instanceof Error ? err.message : t('errorDeletingTracker'),
         type: 'error'
       });
     } finally {
@@ -77,7 +79,7 @@ export const Dashboard: React.FC = () => {
   const handleTrackerCreated = () => {
     loadTrackers();
     setMessage({
-      text: 'Трекер успешно создан',
+      text: t('trackerCreated'),
       type: 'info'
     });
   };
@@ -91,19 +93,20 @@ export const Dashboard: React.FC = () => {
     try {
       const updatedTracker = await updateTracker(editTracker.id, updated);
       setTrackers(prev => prev.map(t => t.id === editTracker.id ? updatedTracker : t));
-      setMessage({ text: 'Трекер успешно обновлён', type: 'info' });
+      setMessage({ text: t('trackerUpdated'), type: 'info' });
     } catch (err) {
-      setMessage({ text: err instanceof Error ? err.message : 'Ошибка при обновлении трекера', type: 'error' });
+      setMessage({ text: err instanceof Error ? err.message : t('errorUpdatingTracker'), type: 'error' });
     }
     setEditTracker(null);
   };
 
-  if (loading) return <div className={styles.loading}>Загрузка...</div>;
-  if (error) return <div className={styles.error}>Ошибка: {error}</div>;
+  if (loading) return <div className={styles.loading}>{t('loading')}</div>;
+  if (error) return <div className={styles.error}>{t('error')}: {error}</div>;
 
   return (
     <div className={styles.dashboard}>
-      <h1 className={styles.title}>Панель трекеров</h1>
+      <LanguageSwitcher />
+      <h1 className={styles.title}>{t('dashboardTitle')}</h1>
       
       {message && (
         <div className={`${styles.message} ${styles[message.type]}`}>
@@ -111,7 +114,7 @@ export const Dashboard: React.FC = () => {
           <button 
             className={styles.closeMessage} 
             onClick={() => setMessage(null)}
-            aria-label="Закрыть сообщение"
+            aria-label={t('close')}
           >
             ×
           </button>
@@ -120,8 +123,8 @@ export const Dashboard: React.FC = () => {
 
       {trackers.length === 0 ? (
         <div className={styles.noTrackers}>
-          <p>У вас пока нет трекеров</p>
-          <p>Нажмите кнопку "Добавить трекер", чтобы создать новый трекер</p>
+          <p>{t('noTrackers')}</p>
+          <p>{t('addTracker')}</p>
         </div>
       ) : (
         <div className={styles.trackerGrid}>
@@ -132,24 +135,24 @@ export const Dashboard: React.FC = () => {
               ) : (
                 <div className={styles.genericTracker}>
                   <h2>{tracker.name}</h2>
-                  <p>Тип: {tracker.type}</p>
-                  <p>Текущее значение: {tracker.current_value}</p>
+                  <p>{t('trackerType')}: {tracker.type}</p>
+                  <p>{t('currentValue')}: {tracker.current_value}</p>
                   {tracker.target_value !== null && tracker.target_value !== undefined ? (
-                    <p>{LABELS.targetValue}: {tracker.target_value}</p>
+                    <p>{t('targetValue')}: {tracker.target_value}</p>
                   ) : (
-                    <p>{LABELS.targetValue}: -</p>
+                    <p>{t('targetValue')}: -</p>
                   )}
                   <button 
                     className={styles.deleteButton}
                     onClick={() => confirmDeleteTracker(tracker.id)}
                   >
-                    Удалить трекер
+                    {t('delete')}
                   </button>
                   <button
                     className={styles.editButton}
                     onClick={() => handleTrackerEdit(tracker)}
                   >
-                    Редактировать
+                    {t('edit')}
                   </button>
                 </div>
               )}
@@ -162,7 +165,7 @@ export const Dashboard: React.FC = () => {
         className={styles.addButton}
         onClick={() => setIsCreateModalOpen(true)}
       >
-        + Добавить трекер
+        + {t('addTracker')}
       </button>
 
       {isCreateModalOpen && (
@@ -183,8 +186,8 @@ export const Dashboard: React.FC = () => {
       {isDeleteConfirmOpen && (
         <div className={styles.modal}>
           <div className={styles.modalContent}>
-            <h3>Подтверждение удаления</h3>
-            <p>Вы уверены, что хотите удалить трекер?</p>
+            <h3>{t('deleteConfirmation')}</h3>
+            <p>{t('deleteConfirmationMessage')}</p>
             <div className={styles.confirmActions}>
               <button 
                 className={styles.confirmButton}
@@ -194,13 +197,13 @@ export const Dashboard: React.FC = () => {
                   }
                 }}
               >
-                Да, удалить
+                {t('yes')}
               </button>
               <button 
                 className={styles.cancelButton}
                 onClick={cancelDeleteTracker}
               >
-                Отмена
+                {t('cancel')}
               </button>
             </div>
           </div>
