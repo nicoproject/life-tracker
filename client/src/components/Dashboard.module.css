@@ -133,3 +133,86 @@
   background-color: #c82333;
 }
 
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 500px;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.closeButton {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 5px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  color: #333;
+}
+
+.confirmDialog {
+  /* Add any specific styles for the confirmation dialog content here if needed */
+}
+
+.confirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.confirmButton,
+.cancelButton {
+  padding: 8px 15px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.confirmButton {
+  background-color: #f44336; /* Red color for delete confirmation */
+  border: none;
+  color: white;
+}
+
+.confirmButton:hover {
+  background-color: #d32f2f;
+}
+
+.cancelButton {
+  background-color: #e0e0e0;
+  border: 1px solid #ccc;
+  color: #333;
+}
+
+.cancelButton:hover {
+  background-color: #bdbdbd;
+}
+

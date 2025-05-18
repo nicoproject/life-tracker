@@ -14,6 +14,8 @@ export const Dashboard: React.FC = () => {
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'info' } | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editTracker, setEditTracker] = useState<Tracker | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [trackerToDeleteId, setTrackerToDeleteId] = useState<number | null>(null);
 
   useEffect(() => {
     loadTrackers();
@@ -43,7 +45,7 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const handleTrackerDeleted = async (trackerId: number) => {
+  const executeDeleteTracker = async (trackerId: number) => {
     try {
       await deleteTracker(trackerId);
       setTrackers(prev => prev.filter(t => t.id !== trackerId));
@@ -56,7 +58,20 @@ export const Dashboard: React.FC = () => {
         text: err instanceof Error ? err.message : 'Ошибка при удалении трекера',
         type: 'error'
       });
+    } finally {
+      setIsDeleteConfirmOpen(false);
+      setTrackerToDeleteId(null);
     }
+  };
+
+  const confirmDeleteTracker = (trackerId: number) => {
+    setTrackerToDeleteId(trackerId);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const cancelDeleteTracker = () => {
+    setIsDeleteConfirmOpen(false);
+    setTrackerToDeleteId(null);
   };
 
   const handleTrackerCreated = () => {
@@ -113,7 +128,7 @@ export const Dashboard: React.FC = () => {
           {trackers.map(tracker => (
             <div key={tracker.id} className={styles.trackerCard}>
               {tracker.type === 'counter' && tracker.name === 'Не курю' ? (
-                <SmokingTracker onDeleted={() => handleTrackerDeleted(tracker.id)} />
+                <SmokingTracker onDeleted={() => executeDeleteTracker(tracker.id)} />
               ) : (
                 <div className={styles.genericTracker}>
                   <h2>{tracker.name}</h2>
@@ -126,7 +141,7 @@ export const Dashboard: React.FC = () => {
                   )}
                   <button 
                     className={styles.deleteButton}
-                    onClick={() => handleTrackerDeleted(tracker.id)}
+                    onClick={() => confirmDeleteTracker(tracker.id)}
                   >
                     Удалить трекер
                   </button>
@@ -163,6 +178,33 @@ export const Dashboard: React.FC = () => {
           onClose={() => setEditTracker(null)}
           onSave={handleTrackerUpdate}
         />
+      )}
+
+      {isDeleteConfirmOpen && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <h3>Подтверждение удаления</h3>
+            <p>Вы уверены, что хотите удалить трекер?</p>
+            <div className={styles.confirmActions}>
+              <button 
+                className={styles.confirmButton}
+                onClick={() => {
+                  if (trackerToDeleteId !== null) {
+                    executeDeleteTracker(trackerToDeleteId);
+                  }
+                }}
+              >
+                Да, удалить
+              </button>
+              <button 
+                className={styles.cancelButton}
+                onClick={cancelDeleteTracker}
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
