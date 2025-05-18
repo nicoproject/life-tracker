@@ -18,7 +18,7 @@ export const EditTrackerModal: React.FC<EditTrackerModalProps> = ({ tracker, onC
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Парсим значения из строкового состояния, заменяя запятую на точку
+    // Parse values from string state, replacing comma with dot
     const normalizedCurrent = currentValueString.replace(',', '.');
     const parsedCurrent = parseFloat(normalizedCurrent);
 
@@ -78,9 +78,9 @@ export const EditTrackerModal: React.FC<EditTrackerModalProps> = ({ tracker, onC
               value={currentValueString}
               onChange={e => {
                 const value = e.target.value;
-                // Разрешаем ввод только цифр, точки, запятой и минуса (только в начале)
+                // Allow only digits, dot, comma, and optional minus at the beginning
                 if (/^-?\d*[.,]?\d*$/.test(value) || value === '' || value === '-') {
-                   // Дополнительная проверка на наличие только одного десятичного разделителя
+                   // Additional check for only one decimal separator
                    const dotCount = (value.match(/\./g) || []).length;
                    const commaCount = (value.match(/,/g) || []).length;
                    if (dotCount <= 1 && commaCount <= 1) {
@@ -98,9 +98,9 @@ export const EditTrackerModal: React.FC<EditTrackerModalProps> = ({ tracker, onC
               value={targetValueString}
               onChange={e => {
                 const value = e.target.value;
-                // Разрешаем ввод только цифр, точек, запятой и минуса (только в начале)
+                // Allow only digits, dots, commas, and optional minus at the beginning
                 if (/^-?\d*[.,]?\d*$/.test(value) || value === '' || value === '-') {
-                   // Дополнительная проверка на наличие только одного десятичного разделителя
+                   // Additional check for only one decimal separator
                    const dotCount = (value.match(/\./g) || []).length;
                    const commaCount = (value.match(/,/g) || []).length;
                    if (dotCount <= 1 && commaCount <= 1) {

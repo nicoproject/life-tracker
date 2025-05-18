@@ -31,7 +31,7 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
     if (message) {
       const timer = setTimeout(() => {
         setMessage(null);
-      }, 5000); // Сообщение будет показываться 5 секунд
+      }, 5000); // Message will be shown for 5 seconds
 
       return () => clearTimeout(timer);
     }
@@ -46,7 +46,7 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
         if (smokingTracker) {
           setTracker(smokingTracker);
           const trackerEntries = await fetchTrackerEntries(smokingTracker.id);
-          // Удаляем дубликаты и сортируем
+          // Remove duplicates and sort
           const uniqueEntries = trackerEntries.reduce((acc: TrackerEntry[], current) => {
             const isDuplicate = acc.some(entry => 
               entry.date === current.date && 
@@ -81,31 +81,28 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
       const now = new Date();
       const today = now.toISOString().split('T')[0];
       
-      // Проверяем наличие записи такого же типа за сегодня
+      // Check for an entry of the same type for today
       const hasSameStatusToday = entries.some(e => 
         e.date === today && e.status === status
       );
       
       if (hasSameStatusToday) {
-        const messages = {
+        const messages: { failure: string; success: string; reset: string } = {
           failure: 'Вы уже отметили срыв сегодня, успокойтесь, срыв - часть выздоровления',
           success: 'Вы уже отметили успешный день сегодня',
           reset: 'Вы уже сбросили счетчик сегодня'
         };
         
         setMessage({
-          text: messages[status],
+          text: messages[status as keyof typeof messages],
           type: 'info'
         });
         return;
       }
 
-      // Проверяем, можно ли обнулить счетчик
+      // Check if the counter can be reset
       if (status === 'reset' && tracker.current_value === 0) {
-        setMessage({
-          text: 'Счетчик уже обнулен',
-          type: 'info'
-        });
+        setMessage({ text: 'Счетчик уже обнулен', type: 'info' });
         return;
       }
 
@@ -128,10 +125,7 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
         );
         
         if (isDuplicate) {
-          setMessage({
-            text: 'Эта запись уже существует',
-            type: 'info'
-          });
+          setMessage({ text: 'Эта запись уже существует', type: 'info' });
           return prev;
         }
         
@@ -142,10 +136,7 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
         });
       });
     } catch (err) {
-      setMessage({
-        text: err instanceof Error ? err.message : 'Произошла ошибка',
-        type: 'error'
-      });
+      setMessage({ text: err instanceof Error ? err.message : 'Произошла ошибка', type: 'error' });
     }
   };
 
@@ -154,19 +145,13 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
 
     try {
       await deleteTracker(tracker.id);
-      setMessage({
-        text: 'Трекер успешно удален',
-        type: 'info'
-      });
+      setMessage({ text: 'Трекер успешно удален', type: 'info' });
       onDeleted?.(tracker.id);
       setTracker(null);
       setEntries([]);
       setIsDeleteConfirmOpen(false);
     } catch (err) {
-      setMessage({
-        text: err instanceof Error ? err.message : 'Ошибка при удалении трекера',
-        type: 'error'
-      });
+      setMessage({ text: err instanceof Error ? err.message : 'Ошибка при удалении трекера', type: 'error' });
     }
   };
 

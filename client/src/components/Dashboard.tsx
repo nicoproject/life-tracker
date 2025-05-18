@@ -24,7 +24,7 @@ export const Dashboard: React.FC = () => {
       setLoading(true);
       const fetchedTrackers = await fetchTrackers();
       
-      // Удаляем дубликаты по имени, оставляя только первый трекер
+      // Remove tracker duplicates by name, keeping only the first one
       const uniqueTrackers = fetchedTrackers.reduce((acc: Tracker[], current) => {
         const exists = acc.find(t => t.name === current.name);
         if (!exists) {

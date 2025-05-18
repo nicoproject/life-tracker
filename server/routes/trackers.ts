@@ -4,7 +4,7 @@ import { Tracker, TrackerEntry } from '../db'
 
 const router = Router()
 
-// Получить все трекеры
+// Get all trackers
 router.get('/', async (req, res) => {
   try {
     const trackers = await db.query<Tracker>(
@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
   }
 })
 
-// Создать новый трекер
+// Create a new tracker
 router.post('/', async (req, res) => {
   const { name, type, target_value } = req.body
   try {
@@ -34,7 +34,7 @@ router.post('/', async (req, res) => {
   }
 })
 
-// Удалить трекер
+// Delete a tracker
 router.delete('/:id', async (req, res) => {
   const { id } = req.params
   try {
@@ -45,7 +45,7 @@ router.delete('/:id', async (req, res) => {
   }
 })
 
-// Получить записи трекера
+// Get tracker entries
 router.get('/:id/entries', async (req, res) => {
   const { id } = req.params
   try {
@@ -59,7 +59,7 @@ router.get('/:id/entries', async (req, res) => {
   }
 })
 
-// Создать запись трекера
+// Create tracker entry
 router.post('/:id/entries', async (req, res) => {
   const { id } = req.params
   const { date, status, notes } = req.body
@@ -67,7 +67,7 @@ router.post('/:id/entries', async (req, res) => {
   try {
     console.log('Creating tracker entry:', { id, date, status, notes })
 
-    // Проверяем существование трекера
+    // Check if tracker exists
     const trackers = await db.query<Tracker>(
       'SELECT * FROM trackers WHERE id = ?',
       [id],
@@ -78,7 +78,7 @@ router.post('/:id/entries', async (req, res) => {
       return res.status(404).json({ error: 'Tracker not found' })
     }
 
-    // Проверяем, нет ли уже записи за этот день
+    // Check if entry for this date already exists
     const existingEntries = await db.query<TrackerEntry>(
       'SELECT * FROM tracker_entries WHERE tracker_id = ? AND date = ? AND status = ?',
       [id, date, status],
@@ -91,7 +91,7 @@ router.post('/:id/entries', async (req, res) => {
         .json({ error: 'Entry for this date and status already exists' })
     }
 
-    // Создаем новую запись
+    // Create a new entry
     const result = await db.execute(
       'INSERT INTO tracker_entries (tracker_id, date, entry_time, status, value, notes) VALUES (?, ?, ?, ?, ?, ?)',
       [
@@ -104,13 +104,13 @@ router.post('/:id/entries', async (req, res) => {
       ],
     )
 
-    // Получаем созданную запись
+    // Get the created entry
     const [newEntry] = await db.query<TrackerEntry>(
       'SELECT * FROM tracker_entries WHERE id = ?',
       [result.insertId],
     )
 
-    // Обновляем значение трекера
+    // Update tracker value
     if (status === 'success') {
       await db.execute(
         'UPDATE trackers SET current_value = current_value + 1 WHERE id = ?',
@@ -133,13 +133,13 @@ router.post('/:id/entries', async (req, res) => {
   }
 })
 
-// PUT /:id — обновить current_value и target_value и name
+// PUT /:id - update current_value, target_value, and name
 router.put('/:id', async (req, res) => {
   const { id } = req.params
   const { name, current_value, target_value } = req.body
 
   try {
-    // Проверяем существование трекера
+    // Check if tracker exists
     const trackers = await db.query<Tracker>(
       'SELECT * FROM trackers WHERE id = ?',
       [id],
@@ -149,13 +149,13 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Tracker not found' })
     }
 
-    // Обновляем значения
+    // Update values
     await db.execute(
       'UPDATE trackers SET name = ?, current_value = ?, target_value = ? WHERE id = ?',
       [name, current_value, target_value, id],
     )
 
-    // Получаем обновленный трекер
+    // Get the updated tracker
     const updatedTrackers = await db.query<Tracker>(
       'SELECT * FROM trackers WHERE id = ?',
       [id],

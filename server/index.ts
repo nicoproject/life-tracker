@@ -7,7 +7,7 @@ import trackersRouter from './routes/trackers'
 const app = express()
 const port = 3001
 
-// Настройка CORS
+// CORS configuration
 app.use(
   cors({
     origin: ['http://localhost:5173', 'http://localhost:3000'],
@@ -20,7 +20,7 @@ app.use(express.json())
 app.use('/tasks', tasksRouter)
 app.use('/api/trackers', trackersRouter)
 
-// Проверка подключения к базе данных
+// Database connection check
 pool
   .getConnection()
   .then((connection) => {
