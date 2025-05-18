@@ -56,3 +56,16 @@ export const deleteTracker = async (trackerId: number): Promise<void> => {
   if (!response.ok) throw new Error('Failed to delete tracker')
 }
 
+export const updateTracker = async (
+  trackerId: number,
+  input: Partial<Pick<Tracker, 'name' | 'current_value' | 'target_value'>>,
+): Promise<Tracker> => {
+  const response = await fetch(`${API_URL}/trackers/${trackerId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+  if (!response.ok) throw new Error('Failed to update tracker')
+  return response.json()
+}
+

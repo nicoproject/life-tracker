@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Tracker } from '../types/tracker';
-import { fetchTrackers, deleteTracker } from '../api/tracker';
+import { fetchTrackers, deleteTracker, updateTracker } from '../api/tracker';
 import { SmokingTracker } from './SmokingTracker';
 import { CreateTrackerModal } from './CreateTrackerModal';
+import { EditTrackerModal } from './EditTrackerModal';
 import styles from './Dashboard.module.css';
 import { LABELS } from './labels';
 
@@ -12,6 +13,7 @@ export const Dashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'info' } | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editTracker, setEditTracker] = useState<Tracker | null>(null);
 
   useEffect(() => {
     loadTrackers();
@@ -65,6 +67,22 @@ export const Dashboard: React.FC = () => {
     });
   };
 
+  const handleTrackerEdit = (tracker: Tracker) => {
+    setEditTracker(tracker);
+  };
+
+  const handleTrackerUpdate = async (updated: { name: string; current_value: number; target_value: number | null }) => {
+    if (!editTracker) return;
+    try {
+      const updatedTracker = await updateTracker(editTracker.id, updated);
+      setTrackers(prev => prev.map(t => t.id === editTracker.id ? updatedTracker : t));
+      setMessage({ text: 'Трекер успешно обновлён', type: 'info' });
+    } catch (err) {
+      setMessage({ text: err instanceof Error ? err.message : 'Ошибка при обновлении трекера', type: 'error' });
+    }
+    setEditTracker(null);
+  };
+
   if (loading) return <div className={styles.loading}>Загрузка...</div>;
   if (error) return <div className={styles.error}>Ошибка: {error}</div>;
 
@@ -112,6 +130,12 @@ export const Dashboard: React.FC = () => {
                   >
                     Удалить трекер
                   </button>
+                  <button
+                    className={styles.editButton}
+                    onClick={() => handleTrackerEdit(tracker)}
+                  >
+                    Редактировать
+                  </button>
                 </div>
               )}
             </div>
@@ -130,6 +154,14 @@ export const Dashboard: React.FC = () => {
         <CreateTrackerModal
           onClose={() => setIsCreateModalOpen(false)}
           onTrackerCreated={handleTrackerCreated}
+        />
+      )}
+
+      {editTracker && (
+        <EditTrackerModal
+          tracker={editTracker}
+          onClose={() => setEditTracker(null)}
+          onSave={handleTrackerUpdate}
         />
       )}
     </div>

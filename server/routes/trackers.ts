@@ -126,12 +126,44 @@ router.post('/:id/entries', async (req, res) => {
     res.status(201).json(newEntry)
   } catch (err) {
     console.error('Error creating tracker entry:', err)
-    res
-      .status(500)
-      .json({
-        error:
-          err instanceof Error ? err.message : 'Failed to create tracker entry',
-      })
+    res.status(500).json({
+      error:
+        err instanceof Error ? err.message : 'Failed to create tracker entry',
+    })
+  }
+})
+
+// PUT /:id — обновить current_value и target_value и name
+router.put('/:id', async (req, res) => {
+  const { id } = req.params
+  const { name, current_value, target_value } = req.body
+
+  try {
+    // Проверяем существование трекера
+    const trackers = await db.query<Tracker>(
+      'SELECT * FROM trackers WHERE id = ?',
+      [id],
+    )
+
+    if (!trackers || trackers.length === 0) {
+      return res.status(404).json({ error: 'Tracker not found' })
+    }
+
+    // Обновляем значения
+    await db.execute(
+      'UPDATE trackers SET name = ?, current_value = ?, target_value = ? WHERE id = ?',
+      [name, current_value, target_value, id],
+    )
+
+    // Получаем обновленный трекер
+    const updatedTrackers = await db.query<Tracker>(
+      'SELECT * FROM trackers WHERE id = ?',
+      [id],
+    )
+
+    res.json(updatedTrackers[0])
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update tracker' })
   }
 })
 
