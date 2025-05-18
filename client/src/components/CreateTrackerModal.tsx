@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { TrackerType } from '../types/tracker';
 import { createTracker } from '../api/tracker';
 import styles from './CreateTrackerModal.module.css';
+import { LABELS } from './labels';
 
 interface CreateTrackerModalProps {
   onClose: () => void;
@@ -46,15 +47,6 @@ export const CreateTrackerModal: React.FC<CreateTrackerModalProps> = ({
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка при создании трекера');
     }
-  };
-
-  const LABELS = {
-    name: 'Название трекера',
-    type: 'Тип трекера',
-    value: 'Значение',
-    cancel: 'Отмена',
-    create: 'Создать',
-    createTitle: 'Создать новый трекер',
   };
 
   return (

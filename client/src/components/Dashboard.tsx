@@ -4,6 +4,7 @@ import { fetchTrackers, deleteTracker } from '../api/tracker';
 import { SmokingTracker } from './SmokingTracker';
 import { CreateTrackerModal } from './CreateTrackerModal';
 import styles from './Dashboard.module.css';
+import { LABELS } from './labels';
 
 export const Dashboard: React.FC = () => {
   const [trackers, setTrackers] = useState<Tracker[]>([]);
@@ -101,9 +102,9 @@ export const Dashboard: React.FC = () => {
                   <p>Тип: {tracker.type}</p>
                   <p>Текущее значение: {tracker.current_value}</p>
                   {tracker.target_value !== null && tracker.target_value !== undefined ? (
-                    <p>Целевое значение: {tracker.target_value}</p>
+                    <p>{LABELS.targetValue}: {tracker.target_value}</p>
                   ) : (
-                    <p>Целевое значение: -</p>
+                    <p>{LABELS.targetValue}: -</p>
                   )}
                   <button 
                     className={styles.deleteButton}
