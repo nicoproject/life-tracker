@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLanguage, Language } from '../constants/labels';
+import { useLanguage, Language } from '../constants/labels.tsx';
 import styles from './LanguageSwitcher.module.css';
 
 export const LanguageSwitcher: React.FC = () => {

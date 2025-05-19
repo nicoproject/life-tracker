@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { TrackerType } from '../types/tracker';
 import { createTracker } from '../api/tracker';
 import styles from './CreateTrackerModal.module.css';
-import { LABELS } from './labels';
+import { useLanguage } from '../constants/labels.tsx';
 
 interface CreateTrackerModalProps {
   onClose: () => void;
@@ -13,10 +13,12 @@ export const CreateTrackerModal: React.FC<CreateTrackerModalProps> = ({
   onClose,
   onTrackerCreated,
 }) => {
+  const { i18n } = useLanguage();
   const [name, setName] = useState('');
   const [type, setType] = useState<TrackerType>('counter');
   const [targetValueString, setTargetValueString] = useState<string>('0');
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ text: string; type: string } | null>(null);
 
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedType = e.target.value as TrackerType;
@@ -34,7 +36,7 @@ export const CreateTrackerModal: React.FC<CreateTrackerModalProps> = ({
     const parsedTarget = targetValueString === '' ? null : parseFloat(normalizedTarget);
 
     if (parsedTarget !== null && isNaN(parsedTarget)) {
-      setError('Введите корректное целевое значение или оставьте пустым для измерений');
+      setError(i18n('invalidTargetValue'));
       return;
     }
 
@@ -53,7 +55,7 @@ export const CreateTrackerModal: React.FC<CreateTrackerModalProps> = ({
       onTrackerCreated();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка при создании трекера');
+      setError(i18n('errorCreatingTracker'));
     }
   };
 
@@ -63,12 +65,12 @@ export const CreateTrackerModal: React.FC<CreateTrackerModalProps> = ({
         <button 
           className={styles.closeButton}
           onClick={onClose}
-          aria-label="Закрыть"
+          aria-label={i18n('close')}
         >
           ×
         </button>
         
-        <h2>{LABELS.createTitle}</h2>
+        <h2>{i18n('createTitle')}</h2>
         
         {error && (
           <div className={styles.error}>
@@ -78,19 +80,19 @@ export const CreateTrackerModal: React.FC<CreateTrackerModalProps> = ({
         
         <form onSubmit={handleSubmit}>
           <div className={styles.formGroup}>
-            <label htmlFor="name">{LABELS.name}:</label>
+            <label htmlFor="name">{i18n('trackerName')}:</label>
             <input
               type="text"
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              placeholder="Например: Тренировки"
+              placeholder={i18n('trackerNamePlaceholder')}
             />
           </div>
           
           <div className={styles.formGroup}>
-            <label htmlFor="type">{LABELS.type}:</label>
+            <label htmlFor="type">{i18n('trackerType')}:</label>
             <select
               id="type"
               value={type}
@@ -104,7 +106,7 @@ export const CreateTrackerModal: React.FC<CreateTrackerModalProps> = ({
           </div>
           
           <div className={styles.formGroup}>
-            <label htmlFor="targetValue">{LABELS.targetValue}:</label>
+            <label htmlFor="targetValue">{i18n('targetValue')}:</label>
             <input
               type="text"
               id="targetValue"
@@ -125,10 +127,10 @@ export const CreateTrackerModal: React.FC<CreateTrackerModalProps> = ({
           
           <div className={styles.formActions}>
             <button type="button" onClick={onClose} className={styles.cancelButton}>
-              {LABELS.cancel}
+              {i18n('cancel')}
             </button>
             <button type="submit" className={styles.submitButton}>
-              {LABELS.create}
+              {i18n('createTracker')}
             </button>
           </div>
         </form>

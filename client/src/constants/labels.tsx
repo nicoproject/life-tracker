@@ -69,6 +69,8 @@ export const translations = {
     invalidValue: 'Please enter a valid number',
     valueSaved: 'Value saved successfully',
     enterValue: 'Enter value',
+    createTitle: 'Create Tracker',
+    type: 'Type',
   },
   ru: {
     loading: 'Загрузка...',
@@ -130,6 +132,8 @@ export const translations = {
     invalidValue: 'Пожалуйста, введите корректное число',
     valueSaved: 'Значение успешно сохранено',
     enterValue: 'Введите значение',
+    createTitle: 'Создать трекер',
+    type: 'Тип',
   },
 } as const
 
@@ -179,6 +183,6 @@ export const useLanguage = () => {
   if (context === undefined) {
     throw new Error('useLanguage must be used within a LanguageProvider')
   }
-  return context
+  return { ...context, i18n: context.t };
 }
 

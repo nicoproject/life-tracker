@@ -10,7 +10,7 @@ import styles from './Dashboard.module.css';
 import { useLanguage } from '../constants/labels.tsx';
 
 export const Dashboard: React.FC = () => {
-  const { t, language } = useLanguage();
+  const { i18n, language } = useLanguage();
   const [trackers, setTrackers] = useState<Tracker[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +64,7 @@ export const Dashboard: React.FC = () => {
 
       setTrackers(uniqueTrackers);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('errorLoadingTrackers'));
+      setError(err instanceof Error ? err.message : i18n('errorLoadingTrackers'));
     } finally {
       setLoading(false);
     }
@@ -75,12 +75,12 @@ export const Dashboard: React.FC = () => {
       await deleteTracker(trackerId);
       setTrackers(prev => prev.filter(t => t.id !== trackerId));
       setMessage({
-        text: t('trackerDeleted'),
+        text: i18n('trackerDeleted'),
         type: 'info'
       });
     } catch (err) {
       setMessage({
-        text: err instanceof Error ? err.message : t('errorDeletingTracker'),
+        text: err instanceof Error ? err.message : i18n('errorDeletingTracker'),
         type: 'error'
       });
     } finally {
@@ -102,7 +102,7 @@ export const Dashboard: React.FC = () => {
   const handleTrackerCreated = () => {
     loadTrackers();
     setMessage({
-      text: t('trackerCreated'),
+      text: i18n('trackerCreated'),
       type: 'info'
     });
   };
@@ -116,20 +116,20 @@ export const Dashboard: React.FC = () => {
     try {
       const updatedTracker = await updateTracker(editTracker.id, updated);
       setTrackers(prev => prev.map(t => t.id === editTracker.id ? updatedTracker : t));
-      setMessage({ text: t('trackerUpdated'), type: 'info' });
+      setMessage({ text: i18n('trackerUpdated'), type: 'info' });
     } catch (err) {
-      setMessage({ text: err instanceof Error ? err.message : t('errorUpdatingTracker'), type: 'error' });
+      setMessage({ text: err instanceof Error ? err.message : i18n('errorUpdatingTracker'), type: 'error' });
     }
     setEditTracker(null);
   };
 
-  if (loading) return <div className={styles.loading}>{t('loading')}</div>;
-  if (error) return <div className={styles.error}>{t('error')}: {error}</div>;
+  if (loading) return <div className={styles.loading}>{i18n('loading')}</div>;
+  if (error) return <div className={styles.error}>{i18n('error')}: {error}</div>;
 
   return (
     <div className={styles.dashboard}>
       <LanguageSwitcher />
-      <h1 className={styles.title}>{t('dashboardTitle')}</h1>
+      <h1 className={styles.title}>{i18n('dashboardTitle')}</h1>
       
       {/* Date Navigation */}
       <div className={styles.dateNavigation}>
@@ -144,7 +144,7 @@ export const Dashboard: React.FC = () => {
           <button 
             className={styles.closeMessage} 
             onClick={() => setMessage(null)}
-            aria-label={t('close')}
+            aria-label={i18n('close')}
           >
             ×
           </button>
@@ -153,8 +153,8 @@ export const Dashboard: React.FC = () => {
 
       {trackers.length === 0 ? (
         <div className={styles.noTrackers}>
-          <p>{t('noTrackers')}</p>
-          <p>{t('addTracker')}</p>
+          <p>{i18n('noTrackers')}</p>
+          <p>{i18n('addTracker')}</p>
         </div>
       ) : (
         <div className={styles.trackerGrid}>
@@ -170,24 +170,24 @@ export const Dashboard: React.FC = () => {
               ) : (
                 <div className={styles.genericTracker}>
                   <h2>{tracker.name}</h2>
-                  <p>{t('trackerType')}: {tracker.type}</p>
-                  <p>{t('currentValue')}: {tracker.current_value}</p>
+                  <p>{i18n('trackerType')}: {tracker.type}</p>
+                  <p>{i18n('currentValue')}: {tracker.current_value}</p>
                   {tracker.target_value !== null && tracker.target_value !== undefined ? (
-                    <p>{t('targetValue')}: {tracker.target_value}</p>
+                    <p>{i18n('targetValue')}: {tracker.target_value}</p>
                   ) : (
-                    <p>{t('targetValue')}: -</p>
+                    <p>{i18n('targetValue')}: -</p>
                   )}
                   <button 
                     className={styles.deleteButton}
                     onClick={() => confirmDeleteTracker(tracker.id)}
                   >
-                    {t('delete')}
+                    {i18n('delete')}
                   </button>
                   <button
                     className={styles.editButton}
                     onClick={() => handleTrackerEdit(tracker)}
                   >
-                    {t('edit')}
+                    {i18n('edit')}
                   </button>
                 </div>
               )}
@@ -200,7 +200,7 @@ export const Dashboard: React.FC = () => {
         className={styles.addButton}
         onClick={() => setIsCreateModalOpen(true)}
       >
-        + {t('addTracker')}
+        + {i18n('addTracker')}
       </button>
 
       {isCreateModalOpen && (
@@ -221,8 +221,8 @@ export const Dashboard: React.FC = () => {
       {isDeleteConfirmOpen && (
         <div className={styles.modal}>
           <div className={styles.modalContent}>
-            <h3>{t('deleteConfirmation')}</h3>
-            <p>{t('deleteConfirmationMessage')}</p>
+            <h3>{i18n('deleteConfirmation')}</h3>
+            <p>{i18n('deleteConfirmationMessage')}</p>
             <div className={styles.confirmActions}>
               <button 
                 className={styles.confirmButton}
@@ -232,13 +232,13 @@ export const Dashboard: React.FC = () => {
                   }
                 }}
               >
-                {t('yes')}
+                {i18n('yes')}
               </button>
               <button 
                 className={styles.cancelButton}
                 onClick={cancelDeleteTracker}
               >
-                {t('cancel')}
+                {i18n('cancel')}
               </button>
             </div>
           </div>

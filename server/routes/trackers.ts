@@ -4,17 +4,6 @@ import { Tracker, TrackerEntry } from '../db'
 
 const router = Router()
 
-// Temporary logging for debugging routing
-router.use('/:id/', (req, res, next) => {
-  console.log(
-    'Reached tracker ID middleware for path:',
-    req.path,
-    'originalUrl:',
-    req.originalUrl,
-  )
-  next() // Continue to the next middleware/route handler
-})
-
 // Get all trackers
 router.get('/', async (req, res) => {
   try {
@@ -58,11 +47,6 @@ router.delete('/:id', async (req, res) => {
 
 // Get tracker entries
 router.get('/:id/entries', async (req, res) => {
-  console.log(
-    'Received GET /:id/entries request',
-    req.params.id,
-    req.query.date,
-  )
   const { id } = req.params
   const { date } = req.query
 
@@ -86,7 +70,6 @@ router.get('/:id/entries', async (req, res) => {
 
 // Create tracker entry
 router.post('/:id/entries', async (req, res) => {
-  console.log('Received POST /:id/entries request', req.params.id, req.body)
   const { id } = req.params
   const { date, value, notes } = req.body // Expect date, value, and notes
 

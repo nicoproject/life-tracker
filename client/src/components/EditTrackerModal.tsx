@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Tracker } from '../types/tracker';
-import styles from './CreateTrackerModal.module.css';
-import { LABELS } from './labels';
+import React, { useState, useEffect } from 'react';
+import { Tracker, TrackerType } from '../types/tracker';
+import styles from './EditTrackerModal.module.css';
+import { useLanguage } from '../constants/labels.tsx';
 
 interface EditTrackerModalProps {
   tracker: Tracker;
@@ -9,8 +9,13 @@ interface EditTrackerModalProps {
   onSave: (updated: { name: string; current_value: number; target_value: number | null }) => void;
 }
 
-export const EditTrackerModal: React.FC<EditTrackerModalProps> = ({ tracker, onClose, onSave }) => {
-  const [trackerName, setTrackerName] = useState<string>(tracker.name);
+export const EditTrackerModal: React.FC<EditTrackerModalProps> = ({
+  tracker,
+  onClose,
+  onSave,
+}) => {
+  const { i18n } = useLanguage();
+  const [name, setName] = useState(tracker.name);
   const [currentValueString, setCurrentValueString] = useState<string>(String(tracker.current_value).replace('.', ','));
   const [targetValueString, setTargetValueString] = useState<string>(tracker.target_value === null ? '' : String(tracker.target_value).replace('.', ','));
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +41,7 @@ export const EditTrackerModal: React.FC<EditTrackerModalProps> = ({ tracker, onC
     }
 
     const updatedData = {
-      name: trackerName,
+      name: name,
       current_value: parsedCurrent,
       target_value: parsedTarget
     };
@@ -48,31 +53,31 @@ export const EditTrackerModal: React.FC<EditTrackerModalProps> = ({ tracker, onC
   return (
     <div className={styles.modal}>
       <div className={styles.modalContent}>
+        <h3>{i18n('editTracker')}</h3>
         <button 
           className={styles.closeButton}
           onClick={onClose}
-          aria-label="Закрыть"
+          aria-label={i18n('close')}
         >
           ×
         </button>
-        <h2>Редактировать трекер</h2>
         {error && <div className={styles.error}>{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className={styles.formGroup}>
-            <label>Название трекера:</label>
+            <label htmlFor="name">{i18n('trackerName')}:</label>
             <input
               type="text"
-              value={trackerName}
-              onChange={e => setTrackerName(e.target.value)}
+              value={name}
+              onChange={e => setName(e.target.value)}
               required
             />
           </div>
           <div className={styles.formGroup}>
-            <label>{LABELS.type}:</label>
+            <label>{i18n('type')}:</label>
             <input type="text" value={tracker.type} disabled />
           </div>
           <div className={styles.formGroup}>
-            <label>{LABELS.value} (текущее):</label>
+            <label htmlFor="current_value">{i18n('currentValue')}:</label>
             <input
               type="text"
               value={currentValueString}
@@ -91,31 +96,33 @@ export const EditTrackerModal: React.FC<EditTrackerModalProps> = ({ tracker, onC
               required
             />
           </div>
-          <div className={styles.formGroup}>
-            <label>{LABELS.targetValue}:</label>
-            <input
-              type="text"
-              value={targetValueString}
-              onChange={e => {
-                const value = e.target.value;
-                // Allow only digits, dots, commas, and optional minus at the beginning
-                if (/^-?\d*[.,]?\d*$/.test(value) || value === '' || value === '-') {
-                   // Additional check for only one decimal separator
-                   const dotCount = (value.match(/\./g) || []).length;
-                   const commaCount = (value.match(/,/g) || []).length;
-                   if (dotCount <= 1 && commaCount <= 1) {
-                      setTargetValueString(value);
-                   }
-                }
-              }}
-            />
-          </div>
+          {(tracker.type === 'counter' || tracker.type === 'progress') && (
+            <div className={styles.formGroup}>
+              <label htmlFor="target_value">{i18n('targetValue')}:</label>
+              <input
+                type="text"
+                value={targetValueString}
+                onChange={e => {
+                  const value = e.target.value;
+                  // Allow only digits, dots, commas, and optional minus at the beginning
+                  if (/^-?\d*[.,]?\d*$/.test(value) || value === '' || value === '-') {
+                     // Additional check for only one decimal separator
+                     const dotCount = (value.match(/\./g) || []).length;
+                     const commaCount = (value.match(/,/g) || []).length;
+                     if (dotCount <= 1 && commaCount <= 1) {
+                        setTargetValueString(value);
+                     }
+                  }
+                }}
+              />
+            </div>
+          )}
           <div className={styles.formActions}>
             <button type="button" onClick={onClose} className={styles.cancelButton}>
-              {LABELS.cancel}
+              {i18n('cancel')}
             </button>
             <button type="submit" className={styles.submitButton}>
-              Сохранить
+              {i18n('save')}
             </button>
           </div>
         </form>

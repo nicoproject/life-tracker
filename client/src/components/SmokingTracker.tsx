@@ -20,7 +20,7 @@ interface SmokingTrackerProps {
 }
 
 export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => {
-  const { t } = useLanguage();
+  const { i18n } = useLanguage();
   const [tracker, setTracker] = useState<Tracker | null>(null);
   const [entries, setEntries] = useState<TrackerEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,7 +67,7 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
           }));
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : t('errorLoadingTrackers'));
+        setError(err instanceof Error ? err.message : i18n('errorLoadingTrackers'));
       } finally {
         setLoading(false);
       }
@@ -89,29 +89,20 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
       );
       
       if (hasSameStatusToday) {
-        const messages: { failure: string; success: string; reset: string } = {
-          failure: t('alreadyMarkedFailure'),
-          success: t('alreadyMarkedSuccess'),
-          reset: t('alreadyReset')
-        };
-        
-        setMessage({
-          text: messages[status as keyof typeof messages],
-          type: 'info'
-        });
+        setMessage({ text: i18n('alreadyMarkedFailure'), type: 'error' });
         return;
       }
 
       // Check if the counter can be reset
       if (status === 'reset' && tracker.current_value === 0) {
-        setMessage({ text: t('counterAlreadyReset'), type: 'info' });
+        setMessage({ text: i18n('counterAlreadyReset'), type: 'error' });
         return;
       }
 
       const entry = await updateTrackerEntry(tracker.id, {
         date: today,
         status,
-        notes: status === 'failure' ? t('statusFailure') : undefined,
+        notes: status === 'failure' ? i18n('statusFailure') : undefined,
       });
       
       if (status === 'success') {
@@ -127,7 +118,7 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
         );
         
         if (isDuplicate) {
-          setMessage({ text: t('entryAlreadyExists'), type: 'info' });
+          setMessage({ text: i18n('entryAlreadyExists'), type: 'error' });
           return prev;
         }
         
@@ -138,7 +129,7 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
         });
       });
     } catch (err) {
-      setMessage({ text: err instanceof Error ? err.message : t('errorLoadingTrackers'), type: 'error' });
+      setMessage({ text: err instanceof Error ? err.message : i18n('errorLoadingTrackers'), type: 'error' });
     }
   };
 
@@ -147,19 +138,19 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
 
     try {
       await deleteTracker(tracker.id);
-      setMessage({ text: t('trackerDeleted'), type: 'info' });
+      setMessage({ text: i18n('trackerDeleted'), type: 'info' });
       onDeleted?.(tracker.id);
       setTracker(null);
       setEntries([]);
       setIsDeleteConfirmOpen(false);
     } catch (err) {
-      setMessage({ text: err instanceof Error ? err.message : t('errorDeletingTracker'), type: 'error' });
+      setMessage({ text: err instanceof Error ? err.message : i18n('errorDeletingTracker'), type: 'error' });
     }
   };
 
-  if (loading) return <div>{t('loading')}</div>;
-  if (error) return <div>{t('error')}: {error}</div>;
-  if (!tracker) return <div>{t('errorLoadingTrackers')}</div>;
+  if (loading) return <div>{i18n('loading')}</div>;
+  if (error) return <div>{i18n('error')}: {error}</div>;
+  if (!tracker) return <div>{i18n('errorLoadingTrackers')}</div>;
 
   const now = new Date();
   const today = now.toISOString().split('T')[0];
@@ -167,49 +158,49 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
 
   return (
     <div className={styles.smokingTracker}>
-      <h2>{t('smokingTracker')}</h2>
+      <h2>{i18n('smokingTracker')}</h2>
       {message && (
         <div className={`${styles.message} ${styles[message.type]}`}>
           <span>{message.text}</span>
           <button 
             className={styles.closeMessage} 
             onClick={() => setMessage(null)}
-            aria-label={t('close')}
+            aria-label={i18n('close')}
           >
             ×
           </button>
         </div>
       )}
       <div className={styles.currentStats}>
-        <p>{t('daysWithoutSmoking')}: {tracker.current_value}</p>
+        <p>{i18n('daysWithoutSmoking')}: {tracker.current_value}</p>
       </div>
       <div className={styles.actions}>
         <button 
           onClick={() => handleStatusChange('success')}
           disabled={todayEntries.some(e => e.status === 'success')}
         >
-          {t('markSuccessfulDay')}
+          {i18n('markSuccessfulDay')}
         </button>
         <button 
           onClick={() => handleStatusChange('failure')}
           disabled={todayEntries.some(e => e.status === 'failure')}
         >
-          {t('markFailure')}
+          {i18n('markFailure')}
         </button>
         <button 
           onClick={() => handleStatusChange('reset')}
           disabled={todayEntries.some(e => e.status === 'reset') || tracker.current_value === 0}
         >
-          {t('resetCounter')}
+          {i18n('resetCounter')}
         </button>
         <button onClick={() => setIsHistoryOpen(true)}>
-          {t('showHistory')}
+          {i18n('showHistory')}
         </button>
         <button 
           className={styles.deleteButton}
           onClick={() => setIsDeleteConfirmOpen(true)}
         >
-          {t('delete')}
+          {i18n('delete')}
         </button>
       </div>
 
@@ -222,11 +213,11 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
             >
               ×
             </button>
-            <h3>{t('trackerHistory')} ({entries.length} {entries.length === 1 ? t('entry') : t('entries')})</h3>
+            <h3>{i18n('trackerHistory')} ({entries.length} {entries.length === 1 ? i18n('entry') : i18n('entries')})</h3>
             <ul className={styles.historyList}>
               {entries.map(entry => (
                 <li key={`${entry.date}-${entry.entry_time}-${entry.status}`}>
-                  {formatDateTime(entry.date, entry.entry_time)}: {entry.status === 'success' ? t('statusSuccess') : entry.status === 'failure' ? t('statusFailure') : t('statusReset')}
+                  {formatDateTime(entry.date, entry.entry_time)}: {entry.status === 'success' ? i18n('statusSuccess') : entry.status === 'failure' ? i18n('statusFailure') : i18n('statusReset')}
                 </li>
               ))}
             </ul>
@@ -237,20 +228,20 @@ export const SmokingTracker: React.FC<SmokingTrackerProps> = ({ onDeleted }) => 
       {isDeleteConfirmOpen && (
         <div className={styles.modal}>
           <div className={`${styles.modalContent} ${styles.confirmDialog}`}>
-            <h3>{t('deleteConfirmation')}</h3>
-            <p>{t('deleteConfirmationMessage')}</p>
+            <h3>{i18n('deleteConfirmation')}</h3>
+            <p>{i18n('deleteConfirmationMessage')}</p>
             <div className={styles.confirmActions}>
               <button 
                 className={styles.confirmButton}
                 onClick={handleDeleteTracker}
               >
-                {t('yes')}
+                {i18n('yes')}
               </button>
               <button 
                 className={styles.cancelButton}
                 onClick={() => setIsDeleteConfirmOpen(false)}
               >
-                {t('cancel')}
+                {i18n('cancel')}
               </button>
             </div>
           </div>
