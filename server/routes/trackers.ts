@@ -4,6 +4,17 @@ import { Tracker, TrackerEntry } from '../db'
 
 const router = Router()
 
+// Temporary logging for debugging routing
+router.use('/:id/', (req, res, next) => {
+  console.log(
+    'Reached tracker ID middleware for path:',
+    req.path,
+    'originalUrl:',
+    req.originalUrl,
+  )
+  next() // Continue to the next middleware/route handler
+})
+
 // Get all trackers
 router.get('/', async (req, res) => {
   try {
@@ -47,12 +58,26 @@ router.delete('/:id', async (req, res) => {
 
 // Get tracker entries
 router.get('/:id/entries', async (req, res) => {
+  console.log(
+    'Received GET /:id/entries request',
+    req.params.id,
+    req.query.date,
+  )
   const { id } = req.params
+  const { date } = req.query
+
   try {
-    const entries = await db.query<TrackerEntry>(
-      'SELECT * FROM tracker_entries WHERE tracker_id = ? ORDER BY date DESC, entry_time DESC',
-      [id],
-    )
+    let query = 'SELECT * FROM tracker_entries WHERE tracker_id = ?'
+    const params = [id]
+
+    if (date) {
+      query += ' AND date = ?'
+      params.push(date as string)
+    }
+
+    query += ' ORDER BY date DESC, entry_time DESC'
+
+    const entries = await db.query<TrackerEntry>(query, params)
     res.json(entries)
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch tracker entries' })
@@ -61,74 +86,54 @@ router.get('/:id/entries', async (req, res) => {
 
 // Create tracker entry
 router.post('/:id/entries', async (req, res) => {
+  console.log('Received POST /:id/entries request', req.params.id, req.body)
   const { id } = req.params
-  const { date, status, notes } = req.body
+  const { date, value, notes } = req.body // Expect date, value, and notes
 
   try {
-    console.log('Creating tracker entry:', { id, date, status, notes })
-
-    // Check if tracker exists
+    // Check if tracker exists (optional, but good practice)
     const trackers = await db.query<Tracker>(
       'SELECT * FROM trackers WHERE id = ?',
       [id],
     )
 
     if (trackers.length === 0) {
-      console.log('Tracker not found:', id)
       return res.status(404).json({ error: 'Tracker not found' })
     }
 
-    // Check if entry for this date already exists
-    const existingEntries = await db.query<TrackerEntry>(
-      'SELECT * FROM tracker_entries WHERE tracker_id = ? AND date = ? AND status = ?',
-      [id, date, status],
-    )
-
-    if (existingEntries.length > 0) {
-      console.log('Entry already exists:', { id, date, status })
-      return res
-        .status(400)
-        .json({ error: 'Entry for this date and status already exists' })
-    }
-
-    // Create a new entry
+    // Use INSERT ... ON DUPLICATE KEY UPDATE for upsert logic
+    // Include entry_time and a default status for measurement entries
     const result = await db.execute(
-      'INSERT INTO tracker_entries (tracker_id, date, entry_time, status, value, notes) VALUES (?, ?, ?, ?, ?, ?)',
+      'INSERT INTO tracker_entries (tracker_id, date, entry_time, status, value, notes) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value), notes = VALUES(notes)',
       [
         id,
         date,
-        new Date().toTimeString().split(' ')[0],
-        status,
-        1,
-        notes || null,
+        new Date().toTimeString().split(' ')[0], // Include current time
+        'measurement', // Use a default status like 'measurement'
+        value,
+        notes || null, // Use null if notes is not provided
       ],
     )
 
-    // Get the created entry
-    const [newEntry] = await db.query<TrackerEntry>(
-      'SELECT * FROM tracker_entries WHERE id = ?',
-      [result.insertId],
+    // After insert/update, fetch the entry to return
+    const [entry] = await db.query<TrackerEntry>(
+      'SELECT * FROM tracker_entries WHERE tracker_id = ? AND date = ?',
+      [id, date],
     )
 
-    // Update tracker value
-    if (status === 'success') {
-      await db.execute(
-        'UPDATE trackers SET current_value = current_value + 1 WHERE id = ?',
-        [id],
-      )
-    } else if (status === 'reset') {
-      await db.execute('UPDATE trackers SET current_value = 0 WHERE id = ?', [
-        id,
-      ])
+    if (!entry) {
+      // This case should ideally not happen with upsert, but good to handle
+      return res
+        .status(500)
+        .json({ error: 'Failed to retrieve upserted entry' })
     }
 
-    console.log('Successfully created entry:', newEntry)
-    res.status(201).json(newEntry)
+    res.status(200).json(entry) // Return 200 for successful update/create
   } catch (err) {
-    console.error('Error creating tracker entry:', err)
+    console.error('Error upserting tracker entry:', err)
     res.status(500).json({
       error:
-        err instanceof Error ? err.message : 'Failed to create tracker entry',
+        err instanceof Error ? err.message : 'Failed to upsert tracker entry',
     })
   }
 })

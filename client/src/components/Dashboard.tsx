@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Tracker } from '../types/tracker';
 import { fetchTrackers, deleteTracker, updateTracker } from '../api/tracker';
 import { SmokingTracker } from './SmokingTracker';
+import { MeasurementTracker } from './MeasurementTracker';
 import { CreateTrackerModal } from './CreateTrackerModal';
 import { EditTrackerModal } from './EditTrackerModal';
 import { LanguageSwitcher } from './LanguageSwitcher';
@@ -9,7 +10,7 @@ import styles from './Dashboard.module.css';
 import { useLanguage } from '../constants/labels.tsx';
 
 export const Dashboard: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [trackers, setTrackers] = useState<Tracker[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,6 +19,28 @@ export const Dashboard: React.FC = () => {
   const [editTracker, setEditTracker] = useState<Tracker | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [trackerToDeleteId, setTrackerToDeleteId] = useState<number | null>(null);
+
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+  // Format the selected date
+  const formattedDate = selectedDate.toLocaleDateString(language === 'ru' ? 'ru-RU' : 'en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  // Functions for date navigation
+  const goToPreviousDay = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() - 1);
+    setSelectedDate(newDate);
+  };
+
+  const goToNextDay = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() + 1);
+    setSelectedDate(newDate);
+  };
 
   useEffect(() => {
     loadTrackers();
@@ -108,6 +131,13 @@ export const Dashboard: React.FC = () => {
       <LanguageSwitcher />
       <h1 className={styles.title}>{t('dashboardTitle')}</h1>
       
+      {/* Date Navigation */}
+      <div className={styles.dateNavigation}>
+        <button onClick={goToPreviousDay}>{'<'}</button>
+        <p className={styles.selectedDate}>{formattedDate}</p>
+        <button onClick={goToNextDay}>{'>'}</button>
+      </div>
+
       {message && (
         <div className={`${styles.message} ${styles[message.type]}`}>
           <span>{message.text}</span>
@@ -132,6 +162,11 @@ export const Dashboard: React.FC = () => {
             <div key={tracker.id} className={styles.trackerCard}>
               {tracker.type === 'counter' && tracker.name === 'Не курю' ? (
                 <SmokingTracker onDeleted={() => executeDeleteTracker(tracker.id)} />
+              ) : tracker.type === 'measurement' ? (
+                <MeasurementTracker 
+                  tracker={tracker}
+                  selectedDate={selectedDate}
+                />
               ) : (
                 <div className={styles.genericTracker}>
                   <h2>{tracker.name}</h2>

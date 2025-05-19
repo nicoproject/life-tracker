@@ -10,6 +10,39 @@
   margin-bottom: 30px;
 }
 
+.todayDate {
+  text-align: center;
+  color: #555;
+  margin-top: 10px;
+  font-size: 1.1em;
+}
+
+.dateNavigation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+  gap: 15px;
+}
+
+.selectedDate {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.dateNavigation button {
+  padding: 5px 10px;
+  font-size: 1em;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+}
+
+.dateNavigation button:hover {
+  background-color: #e9e9e9;
+}
+
 .trackerGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));

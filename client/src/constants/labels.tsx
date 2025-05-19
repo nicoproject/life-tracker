@@ -63,6 +63,12 @@ export const translations = {
     statusFailure: 'Failure',
     statusSuccess: 'Success',
     statusReset: 'Reset',
+    errorLoadingValue: 'Error loading value',
+    errorSavingValue: 'Error saving value',
+    futureDateNotAllowed: 'Cannot save values for future dates',
+    invalidValue: 'Please enter a valid number',
+    valueSaved: 'Value saved successfully',
+    enterValue: 'Enter value',
   },
   ru: {
     loading: 'Загрузка...',
@@ -118,6 +124,12 @@ export const translations = {
     statusFailure: 'Срыв',
     statusSuccess: 'Успех',
     statusReset: 'Сброс',
+    errorLoadingValue: 'Ошибка при загрузке значения',
+    errorSavingValue: 'Ошибка при сохранении значения',
+    futureDateNotAllowed: 'Нельзя сохранять значения для будущих дат',
+    invalidValue: 'Пожалуйста, введите корректное число',
+    valueSaved: 'Значение успешно сохранено',
+    enterValue: 'Введите значение',
   },
 } as const
 

@@ -17,6 +17,13 @@ app.use(
   }),
 )
 app.use(express.json())
+
+// Temporary middleware to log all incoming requests
+app.use((req, res, next) => {
+  console.log(`Incoming request: ${req.method} ${req.originalUrl}`)
+  next()
+})
+
 app.use('/tasks', tasksRouter)
 app.use('/api/trackers', trackersRouter)
 
