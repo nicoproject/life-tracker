@@ -4,7 +4,7 @@ import { ResultSetHeader } from 'mysql2'
 
 const router = Router()
 
-// Получение всех трекеров
+// Get all trackers
 router.get('/', async (req: Request, res: Response) => {
   try {
     const [rows] = await pool.query<Tracker[]>('SELECT * FROM trackers')
@@ -15,7 +15,7 @@ router.get('/', async (req: Request, res: Response) => {
   }
 })
 
-// Создание нового трекера
+// Create a new tracker
 router.post('/', async (req: Request, res: Response) => {
   const { name, type, target_value } = req.body
 
@@ -37,7 +37,7 @@ router.post('/', async (req: Request, res: Response) => {
   }
 })
 
-// Получение записей трекера
+// Get tracker entries
 router.get('/:trackerId/entries', async (req: Request, res: Response) => {
   const { trackerId } = req.params
 
@@ -53,13 +53,13 @@ router.get('/:trackerId/entries', async (req: Request, res: Response) => {
   }
 })
 
-// Обновление записи трекера
+// Update tracker entry
 router.post('/:trackerId/entries', async (req: Request, res: Response) => {
   const { trackerId } = req.params
   const { date, status, notes } = req.body
 
   try {
-    // Проверяем существование трекера
+    // Check if tracker exists
     const [tracker] = await pool.query<Tracker[]>(
       'SELECT * FROM trackers WHERE id = ?',
       [trackerId],
@@ -69,7 +69,7 @@ router.post('/:trackerId/entries', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Tracker not found' })
     }
 
-    // Обновляем или создаем запись
+    // Update or create entry
     await pool.query<ResultSetHeader>(
       `INSERT INTO tracker_entries (tracker_id, date, value, status, notes)
        VALUES (?, ?, ?, ?, ?)
@@ -79,7 +79,7 @@ router.post('/:trackerId/entries', async (req: Request, res: Response) => {
       [trackerId, date, 1, status, notes],
     )
 
-    // Обновляем текущее значение трекера
+    // Update current value of tracker
     if (status === 'success') {
       await pool.query<ResultSetHeader>(
         'UPDATE trackers SET current_value = current_value + 1 WHERE id = ?',
@@ -92,7 +92,7 @@ router.post('/:trackerId/entries', async (req: Request, res: Response) => {
       )
     }
 
-    // Получаем обновленную запись
+    // Get updated entry
     const [updatedEntry] = await pool.query<TrackerEntry[]>(
       'SELECT * FROM tracker_entries WHERE tracker_id = ? AND date = ?',
       [trackerId, date],

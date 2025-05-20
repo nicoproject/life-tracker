@@ -8,6 +8,91 @@ import { EditTrackerModal } from './EditTrackerModal';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import styles from './Dashboard.module.css';
 import { useLanguage } from '../constants/labels.tsx';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// --- Tracker card content ---
+function TrackerCardContent({ tracker, selectedDate, i18n, onDelete, onEdit, onReload }: any) {
+  if (tracker.type === 'counter' && tracker.name === 'Не курю') {
+    return <SmokingTracker onDeleted={onReload} />;
+  } else if (tracker.type === 'measurement') {
+    return <MeasurementTracker tracker={tracker} selectedDate={selectedDate} />;
+  } else {
+    return (
+      <div className={styles.genericTracker}>
+        <h2>{tracker.name}</h2>
+        <p>{i18n('trackerType')}: {tracker.type}</p>
+        <p>{i18n('currentValue')}: {tracker.current_value}</p>
+        {tracker.target_value !== null && tracker.target_value !== undefined ? (
+          <p>{i18n('targetValue')}: {tracker.target_value}</p>
+        ) : (
+          <p>{i18n('targetValue')}: -</p>
+        )}
+        <button
+          className={styles.deleteButton}
+          onClick={() => onDelete(tracker.id)}
+        >
+          {i18n('delete')}
+        </button>
+        <button
+          className={styles.editButton}
+          onClick={() => onEdit(tracker)}
+        >
+          {i18n('edit')}
+        </button>
+      </div>
+    );
+  }
+}
+
+// --- Sortable tracker card ---
+function SortableTrackerCard({ tracker, index, children }: { tracker: Tracker; index: number; children: React.ReactNode }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+    isOver,
+  } = useSortable({ id: tracker.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : undefined,
+    opacity: isDragging ? 0.7 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={
+        styles.trackerCard +
+        (isDragging ? ' ' + styles.dragging : '') +
+        (isOver ? ' ' + styles.placeholder : '')
+      }
+      {...attributes}
+      {...listeners}
+    >
+      {children}
+    </div>
+  );
+}
 
 export const Dashboard: React.FC = () => {
   const { i18n, language } = useLanguage();
@@ -19,6 +104,7 @@ export const Dashboard: React.FC = () => {
   const [editTracker, setEditTracker] = useState<Tracker | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [trackerToDeleteId, setTrackerToDeleteId] = useState<number | null>(null);
+  const [activeId, setActiveId] = useState<number | null>(null);
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
@@ -42,6 +128,15 @@ export const Dashboard: React.FC = () => {
     setSelectedDate(newDate);
   };
 
+  // DnD-kit sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    })
+  );
+
   useEffect(() => {
     loadTrackers();
   }, []);
@@ -50,7 +145,6 @@ export const Dashboard: React.FC = () => {
     try {
       setLoading(true);
       const fetchedTrackers = await fetchTrackers();
-      
       // Remove tracker duplicates by name, keeping only the first one
       const uniqueTrackers = fetchedTrackers.reduce((acc: Tracker[], current) => {
         const exists = acc.find(t => t.name === current.name);
@@ -61,7 +155,6 @@ export const Dashboard: React.FC = () => {
         }
         return acc;
       }, []);
-
       setTrackers(uniqueTrackers);
     } catch (err) {
       setError(err instanceof Error ? err.message : i18n('errorLoadingTrackers'));
@@ -123,6 +216,23 @@ export const Dashboard: React.FC = () => {
     setEditTracker(null);
   };
 
+  // DnD-kit handlers
+  const handleDragStart = (event: any) => {
+    setActiveId(event.active.id);
+  };
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    setActiveId(null);
+    if (active.id !== over?.id) {
+      const oldIndex = trackers.findIndex(t => t.id === active.id);
+      const newIndex = trackers.findIndex(t => t.id === over.id);
+      setTrackers((items) => arrayMove(items, oldIndex, newIndex));
+    }
+  };
+
+  const getActiveTracker = () => trackers.find(t => t.id === activeId);
+
   if (loading) return <div className={styles.loading}>{i18n('loading')}</div>;
   if (error) return <div className={styles.error}>{i18n('error')}: {error}</div>;
 
@@ -130,14 +240,11 @@ export const Dashboard: React.FC = () => {
     <div className={styles.dashboard}>
       <LanguageSwitcher />
       <h1 className={styles.title}>{i18n('dashboardTitle')}</h1>
-      
-      {/* Date Navigation */}
       <div className={styles.dateNavigation}>
         <button onClick={goToPreviousDay}>{'<'}</button>
         <p className={styles.selectedDate}>{formattedDate}</p>
         <button onClick={goToNextDay}>{'>'}</button>
       </div>
-
       {message && (
         <div className={`${styles.message} ${styles[message.type]}`}>
           <span>{message.text}</span>
@@ -150,66 +257,73 @@ export const Dashboard: React.FC = () => {
           </button>
         </div>
       )}
-
       {trackers.length === 0 ? (
         <div className={styles.noTrackers}>
           <p>{i18n('noTrackers')}</p>
           <p>{i18n('addTracker')}</p>
         </div>
       ) : (
-        <div className={styles.trackerGrid}>
-          {trackers.map(tracker => (
-            <div key={tracker.id} className={styles.trackerCard}>
-              {tracker.type === 'counter' && tracker.name === 'Не курю' ? (
-                <SmokingTracker onDeleted={() => executeDeleteTracker(tracker.id)} />
-              ) : tracker.type === 'measurement' ? (
-                <MeasurementTracker 
-                  tracker={tracker}
-                  selectedDate={selectedDate}
-                />
-              ) : (
-                <div className={styles.genericTracker}>
-                  <h2>{tracker.name}</h2>
-                  <p>{i18n('trackerType')}: {tracker.type}</p>
-                  <p>{i18n('currentValue')}: {tracker.current_value}</p>
-                  {tracker.target_value !== null && tracker.target_value !== undefined ? (
-                    <p>{i18n('targetValue')}: {tracker.target_value}</p>
-                  ) : (
-                    <p>{i18n('targetValue')}: -</p>
-                  )}
-                  <button 
-                    className={styles.deleteButton}
-                    onClick={() => confirmDeleteTracker(tracker.id)}
-                  >
-                    {i18n('delete')}
-                  </button>
-                  <button
-                    className={styles.editButton}
-                    onClick={() => handleTrackerEdit(tracker)}
-                  >
-                    {i18n('edit')}
-                  </button>
-                </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={trackers.map(t => t.id)}
+            strategy={rectSortingStrategy}
+          >
+            <div style={{position: 'relative'}}>
+              {activeId && (
+                <div className={styles.dragOverlayBackground} />
               )}
+              <div className={styles.trackerGrid}>
+                {trackers.map((tracker, index) => (
+                  <SortableTrackerCard key={tracker.id} tracker={tracker} index={index}>
+                    <TrackerCardContent
+                      tracker={tracker}
+                      selectedDate={selectedDate}
+                      i18n={i18n}
+                      onDelete={confirmDeleteTracker}
+                      onEdit={handleTrackerEdit}
+                      onReload={loadTrackers}
+                    />
+                  </SortableTrackerCard>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
+          </SortableContext>
+          <DragOverlay dropAnimation={null}>
+            {activeId ? (
+              <div
+                className={styles.trackerCard}
+                style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.25)', opacity: 1, transition: 'none', zIndex: 100 }}
+              >
+                <TrackerCardContent
+                  tracker={getActiveTracker()}
+                  selectedDate={selectedDate}
+                  i18n={i18n}
+                  onDelete={() => {}}
+                  onEdit={() => {}}
+                  onReload={() => {}}
+                />
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       )}
-
       <button 
         className={styles.addButton}
         onClick={() => setIsCreateModalOpen(true)}
       >
         + {i18n('addTracker')}
       </button>
-
       {isCreateModalOpen && (
         <CreateTrackerModal
           onClose={() => setIsCreateModalOpen(false)}
           onTrackerCreated={handleTrackerCreated}
         />
       )}
-
       {editTracker && (
         <EditTrackerModal
           tracker={editTracker}
@@ -217,7 +331,6 @@ export const Dashboard: React.FC = () => {
           onSave={handleTrackerUpdate}
         />
       )}
-
       {isDeleteConfirmOpen && (
         <div className={styles.modal}>
           <div className={styles.modalContent}>
